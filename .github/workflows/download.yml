@@ -7,40 +7,34 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - name: Download Google Android AAPT2 Binaries
+      - name: Download Google Official AAPT2 Binaries
         run: |
           mkdir -p output
           cd output
           
-          # Google Official Maven Repository ကနေ လုံးဝ (လုံးဝ) HTML မပါတဲ့ Binary သန့်သန့်တွေကို တိုက်ရိုက်ဆွဲချခြင်း
-          VERSION="8.3.0-alpha14-11103099"
-          URL="https://repo1.maven.org/maven2/com/android/tools/build/aapt2/$VERSION"
+          # Google ရဲ့ တရားဝင် AOSP (Android Open Source Project) Prebuilts Git ထဲကနေ 
+          # စိတ်ချရဆုံးနဲ့ အသစ်ဆုံး သန့်သန့်ရှင်းရှင်း Executable Binary အစစ်တွေကို တိုက်ရိုက်ဆွဲချခြင်း
           
-          # 1. arm64-v8a အတွက် ဒေါင်းပြီး ဇစ်ဖြည်ကာ binary သီးသန့်ထုတ်ယူခြင်း
-          wget "$URL/aapt2-$VERSION-linux-arm64.jar"
-          unzip -p "aapt2-$VERSION-linux-arm64.jar" aapt2 > aapt2-arm64-v8a
+          # 1. arm64-v8a အတွက်
+          curl -L "https://android.googlesource.com/platform/prebuilts/sdk/+/refs/heads/main/tools/linux/aapt2?format=TEXT" | base64 -d > aapt2-arm64-v8a
           
           # 2. armeabi-v7a အတွက်
-          wget "$URL/aapt2-$VERSION-linux-arm.jar"
-          unzip -p "aapt2-$VERSION-linux-arm.jar" aapt2 > aapt2-armeabi-v7a
+          curl -L "https://android.googlesource.com/platform/prebuilts/sdk/+/refs/heads/main/tools/linux/aapt2?format=TEXT" | base64 -d > aapt2-armeabi-v7a
           
           # 3. x86_64 အတွက်
-          wget "$URL/aapt2-$VERSION-linux-x86_64.jar"
-          unzip -p "aapt2-$VERSION-linux-x86_64.jar" aapt2 > aapt2-x86_64
+          curl -L "https://android.googlesource.com/platform/prebuilts/sdk/+/refs/heads/main/tools/linux/aapt2?format=TEXT" | base64 -d > aapt2-x86_64
           
           # 4. x86 အတွက်
-          wget "$URL/aapt2-$VERSION-windows-x86.jar"
-          unzip -p "aapt2-$VERSION-windows-x86.jar" aapt2.exe > aapt2-x86
-          
-          # သန့်ရှင်းရေးလုပ်ပြီး Execute လုပ်ခွင့် Permission ပေးခြင်း
-          rm -f *.jar
+          curl -L "https://android.googlesource.com/platform/prebuilts/sdk/+/refs/heads/main/tools/windows/aapt2.exe?format=TEXT" | base64 -d > aapt2-x86
+
+          # ဇစ်ဖြည်စရာမလိုဘဲ binary အစစ် တန်းထွက်လာလို့ Permission ပဲ ပေးလိုက်ရုံပါပဲ
           chmod +x aapt2-*
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v1
         with:
           tag_name: v1.0.${{ github.run_number }}
-          name: AAPT2 Official Binaries
+          name: AAPT2 Google Official Binaries
           files: output/aapt2-*
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
