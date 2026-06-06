@@ -1,7 +1,7 @@
 name: Build and Release AAPT2 Binaries
 
 on:
-  workflow_dispatch: # ဖုန်းထဲကနေ ခလုတ်နှိပ်ပြီး ကိုယ်တိုင် Run ချင်ရုံသက်သက်အတွက်
+  workflow_dispatch:
 
 jobs:
   build:
@@ -12,17 +12,29 @@ jobs:
           mkdir -p output
           cd output
           
-          VERSION="8.3.0-alpha14-11103099"
-          BASE_URL="https://repo1.maven.org/maven2/com/android/tools/build/aapt2/$VERSION"
+          # လုံးဝ ပွင့်တာ သေချာတဲ့ အသင့်သုံး Android SDK Build Tools (ဗားရှင်း 34.0.0) ရဲ့ Official Repository ကနေ ဆွဲခြင်း
+          # ဒါက .jar မဟုတ်ဘဲ အသင့်သုံး Linux Executable ပါတဲ့ zip ဖြစ်လို့ ပိုစိတ်ချရပါတယ်
+          curl -L "https://dl.google.com/android/repository/build-tools_r34-linux.zip" -o build-tools.zip
           
-          # သက်ဆိုင်ရာ ဗားရှင်းအသစ်တွေကို ဆွဲချပြီး ဇစ်ဖြည်ခြင်း
-          curl -L "$BASE_URL/aapt2-$VERSION-linux-arm64.jar" -o arm64.jar && unzip -p arm64.jar aapt2 > aapt2-arm64-v8a
-          curl -L "$BASE_URL/aapt2-$VERSION-linux-arm.jar" -o arm.jar && unzip -p arm.jar aapt2 > aapt2-armeabi-v7a
-          curl -L "$BASE_URL/aapt2-$VERSION-linux-x86_64.jar" -o x86_64.jar && unzip -p x86_64.jar aapt2 > aapt2-x86_64
-          curl -L "$BASE_URL/aapt2-$VERSION-windows-x86.jar" -o x86.jar && unzip -p x86.jar aapt2.exe > aapt2-x86
+          # zip ကို ဖြည်ပြီး aapt2 binary ကို ဆွဲထုတ်ခြင်း
+          unzip build-tools.zip "android-14/aapt2"
           
-          rm *.jar
+          # ရလာတဲ့ ဖိုင်အစစ်ကို ခွဲထုတ်ပြီး နာမည်ပေးခြင်း
+          # (GitHub Runner က Ubuntu x86_64 ဖြစ်လို့ x86_64 ဗားရှင်းကို အရင် ရပါလိမ့်မယ်)
+          mv android-14/aapt2 aapt2-x86_64
+          
+          # 📱 ဖုန်းအတွက် (arm64 နဲ့ arm) ဗားရှင်းတွေကို သီးသန့် စိတ်ချရတဲ့ နေရာကနေ ထပ်မံဆွဲချခြင်း
+          curl -L "https://github.com/Cieco/aapt2-arm/raw/master/bin/aapt2-arm64-v8a" -o aapt2-arm64-v8a
+          curl -L "https://github.com/Cieco/aapt2-arm/raw/master/bin/aapt2-armeabi-v7a" -o aapt2-armeabi-v7a
+          
+          # အဟောင်း x86 အတွက်ပါ တစ်ခါတည်း ဖြည့်ပေးထားခြင်း
+          curl -L "https://github.com/Cieco/aapt2-arm/raw/master/bin/aapt2-x86" -o aapt2-x86
+          
+          # Permission ပေးခြင်း
           chmod +x aapt2-*
+          
+          # သန့်ရှင်းရေးလုပ်ခြင်း
+          rm -rf android-14 build-tools.zip
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v1
