@@ -1,0 +1,34 @@
+name: Build and Release AAPT2 Binaries
+
+on:
+  workflow_dispatch: # ဖုန်းထဲကနေ ခလုတ်နှိပ်ပြီး ကိုယ်တိုင် Run ချင်ရုံသက်သက်အတွက်
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download and Extract AAPT2
+        run: |
+          mkdir -p output
+          cd output
+          
+          VERSION="8.3.0-alpha14-11103099"
+          BASE_URL="https://repo1.maven.org/maven2/com/android/tools/build/aapt2/$VERSION"
+          
+          # သက်ဆိုင်ရာ ဗားရှင်းအသစ်တွေကို ဆွဲချပြီး ဇစ်ဖြည်ခြင်း
+          curl -L "$BASE_URL/aapt2-$VERSION-linux-arm64.jar" -o arm64.jar && unzip -p arm64.jar aapt2 > aapt2-arm64-v8a
+          curl -L "$BASE_URL/aapt2-$VERSION-linux-arm.jar" -o arm.jar && unzip -p arm.jar aapt2 > aapt2-armeabi-v7a
+          curl -L "$BASE_URL/aapt2-$VERSION-linux-x86_64.jar" -o x86_64.jar && unzip -p x86_64.jar aapt2 > aapt2-x86_64
+          curl -L "$BASE_URL/aapt2-$VERSION-windows-x86.jar" -o x86.jar && unzip -p x86.jar aapt2.exe > aapt2-x86
+          
+          rm *.jar
+          chmod +x aapt2-*
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: v1.0.${{ github.run_number }}
+          name: AAPT2 Up-to-date Binaries
+          files: output/aapt2-*
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
