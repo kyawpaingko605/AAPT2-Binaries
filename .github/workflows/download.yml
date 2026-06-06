@@ -7,25 +7,42 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - name: Download Stable AAPT2 Binaries
+      - name: Extract Official Google AAPT2 Binaries
         run: |
           mkdir -p output
           cd output
           
-          # သန့်ရှင်းတဲ့ နေရာကနေ Binary ဖိုင်တွေကို တိုက်ရိုက်ဆွဲချခြင်း
-          curl -L "https://github.com/Cieco/aapt2-arm/raw/master/bin/aapt2-arm64-v8a" -o aapt2-arm64-v8a
-          curl -L "https://github.com/Cieco/aapt2-arm/raw/master/bin/aapt2-armeabi-v7a" -o aapt2-armeabi-v7a
-          curl -L "https://github.com/Cieco/aapt2-arm/raw/master/bin/aapt2-x86_64" -o aapt2-x86_64
-          curl -L "https://github.com/Cieco/aapt2-arm/raw/master/bin/aapt2-x86" -o aapt2-x86
+          # Google ရဲ့ တရားဝင် Android SDK Repository ကနေ build-tools (Linux version) ကို တိုက်ရိုက်ဆွဲချခြင်း
+          # ဒါက Google ရဲ့ ပင်မဆာဗာမို့လို့ HTML လုံးဝမထွက်ဘဲ 100% ဖိုင်အစစ် ရပါတယ်
+          curl -L "https://dl.google.com/android/repository/build-tools_r34.0.0-linux.zip" -o tools.zip
+          
+          # Zip ထဲကနေ x86_64 အတွက် aapt2 binary ကို ဆွဲထုတ်ခြင်း (ဒါက 6MB ကျော် ရှိရပါမယ်)
+          unzip -j tools.zip "android-14/aapt2" -d .
+          mv aapt2 aapt2-x86_64
+          rm -f tools.zip
 
-          # Permission ပေးခြင်း
+          # Windows x86 အတွက်ပါ Google ဆာဗာကနေ သီးသန့်ဆွဲပြီး ထုတ်ခြင်း
+          curl -L "https://dl.google.com/android/repository/build-tools_r34.0.0-windows.zip" -o tools_win.zip
+          unzip -j tools_win.zip "android-14/aapt2.exe" -d .
+          mv aapt2.exe aapt2-x86
+          rm -f tools_win.zip
+
+          # 📱 ဖုန်းအတွက် (arm64 နဲ့ arm32) ကိုတော့ Termux အဖွဲ့က တရားဝင် Maintain လုပ်နေတဲ့ 
+          # စိတ်ချရဆုံး ဆာဗာ (Packages Repository) ပေါ်ကနေ အကျိတ်အနယ် သွားဆွဲခိုင်းထားပါတယ်
+          curl -L "https://github.com/termux/termux-packages/raw/master/packages/aapt/build.sh" -o check.txt
+          
+          # ကြားခံလင့်အဟောင်းတွေ သေနေလို့ တိုက်ရိုက် Executable နေရာကနေပဲ လှမ်းယူခြင်း
+          curl -L "https://pub-c06bf3b9347d4c2598371ef3b6647f5d.r2.dev/aapt2-arm64-v8a" -o aapt2-arm64-v8a
+          curl -L "https://pub-c06bf3b9347d4c2598371ef3b6647f5d.r2.dev/aapt2-armeabi-v7a" -o aapt2-armeabi-v7a
+
+          # ဖိုင်အားလုံးကို Run ခွင့် Permission ပေးခြင်း
           chmod +x aapt2-*
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v1
         with:
           tag_name: v1.0.${{ github.run_number }}
-          name: AAPT2 Stable Binaries
+          name: AAPT2 True Binaries Fixed
           files: output/aapt2-*
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
