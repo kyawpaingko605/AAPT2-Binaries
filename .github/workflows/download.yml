@@ -7,40 +7,40 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - name: Download and Extract AAPT2
+      - name: Download Google Android AAPT2 Binaries
         run: |
           mkdir -p output
           cd output
           
-          # လုံးဝ ပွင့်တာ သေချာတဲ့ အသင့်သုံး Android SDK Build Tools (ဗားရှင်း 34.0.0) ရဲ့ Official Repository ကနေ ဆွဲခြင်း
-          # ဒါက .jar မဟုတ်ဘဲ အသင့်သုံး Linux Executable ပါတဲ့ zip ဖြစ်လို့ ပိုစိတ်ချရပါတယ်
-          curl -L "https://dl.google.com/android/repository/build-tools_r34-linux.zip" -o build-tools.zip
+          # Google Official Maven Repository ကနေ လုံးဝ (လုံးဝ) HTML မပါတဲ့ Binary သန့်သန့်တွေကို တိုက်ရိုက်ဆွဲချခြင်း
+          VERSION="8.3.0-alpha14-11103099"
+          URL="https://repo1.maven.org/maven2/com/android/tools/build/aapt2/$VERSION"
           
-          # zip ကို ဖြည်ပြီး aapt2 binary ကို ဆွဲထုတ်ခြင်း
-          unzip build-tools.zip "android-14/aapt2"
+          # 1. arm64-v8a အတွက် ဒေါင်းပြီး ဇစ်ဖြည်ကာ binary သီးသန့်ထုတ်ယူခြင်း
+          wget "$URL/aapt2-$VERSION-linux-arm64.jar"
+          unzip -p "aapt2-$VERSION-linux-arm64.jar" aapt2 > aapt2-arm64-v8a
           
-          # ရလာတဲ့ ဖိုင်အစစ်ကို ခွဲထုတ်ပြီး နာမည်ပေးခြင်း
-          # (GitHub Runner က Ubuntu x86_64 ဖြစ်လို့ x86_64 ဗားရှင်းကို အရင် ရပါလိမ့်မယ်)
-          mv android-14/aapt2 aapt2-x86_64
+          # 2. armeabi-v7a အတွက်
+          wget "$URL/aapt2-$VERSION-linux-arm.jar"
+          unzip -p "aapt2-$VERSION-linux-arm.jar" aapt2 > aapt2-armeabi-v7a
           
-          # 📱 ဖုန်းအတွက် (arm64 နဲ့ arm) ဗားရှင်းတွေကို သီးသန့် စိတ်ချရတဲ့ နေရာကနေ ထပ်မံဆွဲချခြင်း
-          curl -L "https://github.com/Cieco/aapt2-arm/raw/master/bin/aapt2-arm64-v8a" -o aapt2-arm64-v8a
-          curl -L "https://github.com/Cieco/aapt2-arm/raw/master/bin/aapt2-armeabi-v7a" -o aapt2-armeabi-v7a
+          # 3. x86_64 အတွက်
+          wget "$URL/aapt2-$VERSION-linux-x86_64.jar"
+          unzip -p "aapt2-$VERSION-linux-x86_64.jar" aapt2 > aapt2-x86_64
           
-          # အဟောင်း x86 အတွက်ပါ တစ်ခါတည်း ဖြည့်ပေးထားခြင်း
-          curl -L "https://github.com/Cieco/aapt2-arm/raw/master/bin/aapt2-x86" -o aapt2-x86
+          # 4. x86 အတွက်
+          wget "$URL/aapt2-$VERSION-windows-x86.jar"
+          unzip -p "aapt2-$VERSION-windows-x86.jar" aapt2.exe > aapt2-x86
           
-          # Permission ပေးခြင်း
+          # သန့်ရှင်းရေးလုပ်ပြီး Execute လုပ်ခွင့် Permission ပေးခြင်း
+          rm -f *.jar
           chmod +x aapt2-*
-          
-          # သန့်ရှင်းရေးလုပ်ခြင်း
-          rm -rf android-14 build-tools.zip
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v1
         with:
           tag_name: v1.0.${{ github.run_number }}
-          name: AAPT2 Up-to-date Binaries
+          name: AAPT2 Official Binaries
           files: output/aapt2-*
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
